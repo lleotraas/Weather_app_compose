@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Weather App Compose</string>
+    <string-array name="sentence_array">
+        <item>Nous téléchargeons les données…</item>
+        <item>C’est presque fini…</item>
+        <item>Plus que quelques secondes avant d’avoir le résultat…</item>
+    </string-array>
+</resources>
