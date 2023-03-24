@@ -9,7 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
-import fr.lleotraas.myapplication.feature_weather.presentation.utils.MainScreen
+import fr.lleotraas.myapplication.feature_weather.presentation.main.MainScreen
 import fr.lleotraas.myapplication.feature_weather.presentation.utils.Screen
 import fr.lleotraas.myapplication.feature_weather.presentation.weather.WeatherScreen
 import fr.lleotraas.myapplication.ui.theme.WeatherAppComposeTheme
@@ -30,7 +30,6 @@ class MainActivity : ComponentActivity() {
                             MainScreen(navController = navController)
                         }
                         composable(route = Screen.WeatherScreen.route) {
-
                             WeatherScreen(navController = navController)
                         }
                     }

@@ -1,4 +1,4 @@
-package fr.lleotraas.myapplication.feature_weather.presentation.utils
+package fr.lleotraas.myapplication.feature_weather.presentation.main
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
@@ -8,13 +8,13 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import fr.lleotraas.myapplication.feature_weather.presentation.main.components.DefaultButton
 import fr.lleotraas.myapplication.feature_weather.presentation.main.components.DefaultTextView
+import fr.lleotraas.myapplication.feature_weather.presentation.utils.Screen
+import fr.lleotraas.myapplication.R
 
 @Composable
 fun MainScreen(
     navController: NavController
 ) {
-//    val scaffoldState = rememberScaffoldState()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -24,11 +24,11 @@ fun MainScreen(
     ) {
         DefaultTextView(
             modifier = Modifier.fillMaxWidth(),
-            text = "Bienvenue dans l'application"
+            text = navController.context.resources.getString(R.string.greetings)
         )
         DefaultButton(
             modifier = Modifier.fillMaxWidth(),
-            text = "Voir la météo",
+            text = navController.context.resources.getString(R.string.see_meteo),
             onClick = {
                 navController.navigate(Screen.WeatherScreen.route)
             }

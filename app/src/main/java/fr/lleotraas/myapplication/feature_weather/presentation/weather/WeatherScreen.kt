@@ -1,37 +1,30 @@
 package fr.lleotraas.myapplication.feature_weather.presentation.weather
 
-import android.util.Log
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PointMode
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import fr.lleotraas.myapplication.R
 import fr.lleotraas.myapplication.feature_weather.presentation.main.components.DefaultTextView
+import fr.lleotraas.myapplication.feature_weather.presentation.utils.SequenceType
+import fr.lleotraas.myapplication.feature_weather.presentation.utils.Utils
 import fr.lleotraas.myapplication.feature_weather.presentation.weather.component.WeatherItem
 import kotlinx.coroutines.delay
-import kotlin.math.PI
-import kotlin.math.cos
-import kotlin.math.sin
 
 @Composable
 fun WeatherScreen(
@@ -39,134 +32,113 @@ fun WeatherScreen(
     viewModel: WeatherViewModel = hiltViewModel()
 ) {
 
-    var state = viewModel.state.value
-    val scope = rememberCoroutineScope()
+    val state = viewModel.state.value
     val initialValue = 0f
     val totalTime = 60L * 1000L
-    val handleColor = Color.Green
     val inactiveBarColor = Color.DarkGray
     val activeBarColor = Color(0xFF34B900)
     val number = 0
-
 
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-//        LazyColumn(modifier = Modifier.fillMaxWidth()) {
-//            items(state.weatherList) { weather ->
-//                Log.e(javaClass.simpleName, "WeatherScreen: ville:${weather.name} température:${weather.main.temp}")
-//                WeatherItem(modifier = Modifier.fillMaxSize(), weather = weather)
-//            }
-//        }
-//        Spacer(modifier = Modifier.height(16.dp))
-        val strokeWidth: Dp = 5.dp
-        var size by remember {
-            mutableStateOf(IntSize.Zero)
-        }
         var value by remember {
             mutableStateOf(initialValue)
         }
-        var currentTime by remember {
-            mutableStateOf(totalTime)
+        var currentTime by rememberSaveable {
+            mutableStateOf(0L)
         }
-        var isTimeRunning by remember {
-            mutableStateOf(false)
+        var isTimeRunning by rememberSaveable {
+            mutableStateOf(true)
         }
-        var index by remember {
+        var index by rememberSaveable {
             mutableStateOf(number)
         }
-        LaunchedEffect(key1 = currentTime, key2 = isTimeRunning) {
-            if (currentTime > 0 && isTimeRunning) {
-                delay(100L)
-                currentTime -= 100L
-                value = currentTime / totalTime.toFloat()
-                when(currentTime) {
-                    10000L -> viewModel.getCurrentWeatherFromCity("Lyon")
-                    8000L -> viewModel.getCurrentWeatherFromCity("Bordeaux")
-                    6000L -> viewModel.getCurrentWeatherFromCity("Paris")
-                    4000L -> viewModel.getCurrentWeatherFromCity("Marseille")
-                    2000L -> viewModel.getCurrentWeatherFromCity("Brest")
-                }
-                if((currentTime.toInt()/100)%66 == 0) {
-                    index++
-                    if (index == 3) {
-                        index = 0
+        if (!isTimeRunning) {
+            Column(modifier = Modifier.fillMaxWidth()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp)
+                        .weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(state.weatherList) { weather ->
+                        WeatherItem(
+                            weather = weather,
+                            state.weatherIconList[weather.id]!!
+                        )
                     }
+                }
+                Button(
+                    onClick = {
+                    currentTime = 0L
+                    isTimeRunning = true
+                    viewModel.state.value.weatherIconList = HashMap()
+                    viewModel.state.value.weatherList = ArrayList()
+                },
+                    modifier = Modifier
+                        .padding(20.dp)
+                        .fillMaxWidth()
+                        .align(Alignment.CenterHorizontally)
+                ) {
+                    Text(text = navController.context.resources.getString(R.string.again_btn))
                 }
             }
         }
         Box(
-            contentAlignment = Alignment.Center,
             modifier = Modifier
-                .size(200.dp)
-                .onSizeChanged {
-                    size = it
-                }
+                .fillMaxWidth()
+                .height(200.dp),
+            contentAlignment = Alignment.Center,
+
         ) {
-            Canvas(modifier = Modifier.size(200.dp)) {
-                drawArc(
-                    color = inactiveBarColor,
-                    startAngle = -215f,
-                    sweepAngle = 250f,
-                    useCenter = false,
-                    size = Size(size.width.toFloat(), size.height.toFloat()),
-                    style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
-                )
-                drawArc(
-                    color = activeBarColor,
-                    startAngle = -215f,
-                    sweepAngle = 250f * value,
-                    useCenter = false,
-                    size = Size(size.width.toFloat(), size.height.toFloat()),
-                    style = Stroke(strokeWidth.toPx(), cap = StrokeCap.Round)
-                )
-                val center = Offset(size.width /2f, size.height / 2f)
-                val beta = (250f * value + 145f) * (PI / 180f).toFloat()
-                val r = size.width / 2f
-                val a = cos(beta) * r
-                val b = sin(beta) * r
-                drawPoints(
-                    listOf(Offset(center.x + a, center.y + b)),
-                    pointMode = PointMode.Points,
-                    color = handleColor,
-                    strokeWidth = (strokeWidth * 3f).toPx(),
-                    cap = StrokeCap.Round
-                )
-            }
-            Text(
-                text = ((currentTime / 1000L)/ 60.0 * 100.0).toInt().toString(),
-                fontSize = 44.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Button(
-                onClick = {
-                    if (currentTime <= 0L) {
-                        currentTime = totalTime
-                        isTimeRunning = true
-                    } else {
-                        isTimeRunning = !isTimeRunning
+            if (isTimeRunning) {
+
+                LaunchedEffect(key1 = currentTime, key2 = isTimeRunning) {
+                    if (currentTime < totalTime && isTimeRunning) {
+                        delay(1000L)
+                        currentTime += 1000L
+                        value = ((currentTime / 1000L)/ 60.0 * 100.0).toFloat()
+                        viewModel.getCurrentWeatherFromCity(Utils.getCityName(currentTime))
+                        if(state.sequence == SequenceType.WeatherIconSequence) {
+                            viewModel.getBitmapFrom(state.weatherList.last().weather[0].icon, state.weatherList.last().id)
+                        }
+                        index = Utils.incrementIndex(index, currentTime)
+                        if(currentTime == totalTime) {
+                            isTimeRunning = false
+                        }
                     }
-                },
-                modifier = Modifier.align(Alignment.BottomCenter),
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = if (!isTimeRunning || currentTime <= 0L) {
-                        Color.Green
-                    } else {
-                        Color.Red
-                    }
-                )
-            ) {
-                Text(
-                    text = if (isTimeRunning && currentTime >= 0L) "Stop"
-                    else if (!isTimeRunning && currentTime >= 0L) "Start"
-                    else "Restart"
-                )
+                }
+                Column(modifier = Modifier.fillMaxSize()) {
+                    Text(
+                        text = "${((currentTime / 1000L) / 60.0 * 100.0).toInt()}%",
+                        fontSize = 44.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White,
+                        modifier = Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center
+
+                    )
+                    LinearProgressIndicator(
+                        progress = value / 100,
+                        color = activeBarColor,
+                        backgroundColor = inactiveBarColor,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp)
+                            .height(8.dp)
+                            .clip(CircleShape)
+                    )
+                    DefaultTextView(
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        text = navController.context.resources.getStringArray(R.array.sentence_array)[index]
+                    )
+                }
             }
         }
-        DefaultTextView(modifier = Modifier.fillMaxWidth(), text = navController.context.resources.getStringArray(R.array.sentence_array)[index])
     }
-
 }

@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Weather App Compose</string>
+    <string name="again_btn">Recommencer</string>
+    <string name="greetings">Bienvenue dans l\'application méorologique</string>
+    <string name="see_meteo">Voir la météo</string>
     <string-array name="sentence_array">
         <item>Nous téléchargeons les données…</item>
         <item>C’est presque fini…</item>
